@@ -3,123 +3,242 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>자리 배정</title>
+  <title>Minimal Seat Logic</title>
   <style>
+    @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
+
+    :root {
+      --bg: #050505;
+      --surface: #121212;
+      --accent: #ffffff;
+      --secondary: #888888;
+      --border: rgba(255, 255, 255, 0.1);
+      --cell-size: 52px;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-font-smoothing: antialiased;
+    }
+
     body {
+      background-color: var(--bg);
+      color: var(--accent);
+      font-family: 'Pretendard', sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+      padding: 60px 20px;
+      letter-spacing: -0.02em;
+    }
+
+    /* 배경 은은한 빛 */
+    body::after {
+      content: "";
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: radial-gradient(circle at 50% -20%, #1a1a2e 0%, transparent 50%);
+      z-index: -1;
+      pointer-events: none;
+    }
+
+    h1 {
+      font-weight: 300;
+      font-size: 24px;
+      letter-spacing: 0.2em;
+      margin-bottom: 40px;
+      color: var(--accent);
+    }
+
+    /* 상단 컨트롤바 - 미니멀 라인 스타일 */
+    .controls {
+      display: flex;
+      gap: 30px;
+      margin-bottom: 50px;
+      padding-bottom: 20px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .input-item {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .input-item label {
+      font-size: 11px;
+      text-transform: uppercase;
+      color: var(--secondary);
+      letter-spacing: 0.1em;
+    }
+
+    input[type=number] {
+      background: transparent;
+      border: none;
+      border-bottom: 1px solid transparent;
+      color: var(--accent);
       font-size: 16px;
-      font-family: Arial, sans-serif;
+      width: 40px;
+      outline: none;
+      transition: border-color 0.3s;
       text-align: center;
-      margin: 20px;
+      font-weight: 500;
     }
 
-    @media (max-width: 768px) {
-      body {
-        font-size: 20px;
-      }
-      button, input {
-        font-size: 18px;
-        padding: 12px;
-      }
+    input[type=number]:focus {
+      border-bottom-color: var(--accent);
     }
 
+    .btn-main {
+      background: var(--accent);
+      color: var(--bg);
+      border: none;
+      padding: 10px 24px;
+      border-radius: 2px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s;
+      margin-left: 20px;
+    }
+
+    .btn-main:hover {
+      opacity: 0.8;
+      transform: translateY(-1px);
+    }
+
+    /* 전면(칠판) 표시 */
+    .front-label {
+      font-size: 10px;
+      letter-spacing: 0.4em;
+      color: var(--secondary);
+      margin-bottom: 60px;
+      position: relative;
+    }
+
+    .front-label::after {
+      content: "";
+      position: absolute;
+      bottom: -10px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 40px;
+      height: 1px;
+      background: var(--border);
+    }
+
+    /* 그리드 보드 */
     #board {
       display: grid;
-      gap: 5px;
-      justify-content: center;
-      margin-top: 20px;
+      gap: 12px;
+      margin-bottom: 40px;
     }
 
     .cell {
-      width: 50px;
-      height: 50px;
-      border: 1px solid #333;
+      width: var(--cell-size);
+      height: var(--cell-size);
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 4px;
       display: flex;
       align-items: center;
       justify-content: center;
-      background: #f5f5f5;
-      font-size: 16px;
-      border-radius: 6px;
+      font-size: 15px;
+      font-weight: 300;
       cursor: pointer;
-      transition: background 0.3s;
+      transition: all 0.5s cubic-bezier(0.2, 1, 0.3, 1);
     }
 
     .cell:hover {
-      background: #e8f6ff;
+      background: #1a1a1a;
+      border-color: rgba(255,255,255,0.3);
     }
 
-    .disabled {
-      background: #bbb;
-      cursor: not-allowed;
-    }
-
-    .fixed {
-      background: #ffeaa7 !important;
-      font-weight: bold;
-    }
-
-    .blackboard {
-      width: 200px;
-      height: 50px;
-      background: green;
-      color: white;
-      font-weight: bold;
-      font-size: 20px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      margin: 10px auto;
-      border-radius: 8px;
-    }
-
-    input {
-      width: 60px;
-      padding: 5px;
-      margin: 0 5px;
-    }
-
-    button {
-      margin: 5px;
-      padding: 8px 16px;
-      font-size: 14px;
+    .cell.fixed {
+      background: var(--accent);
+      color: var(--bg);
       border: none;
-      border-radius: 5px;
+      font-weight: 600;
+      box-shadow: 0 0 20px rgba(255,255,255,0.2);
+    }
+
+    .cell.disabled {
+      background: transparent;
+      border: 1px solid #101010;
+      color: #222;
+      cursor: default;
+    }
+
+    /* 셔플 버튼 */
+    .btn-shuffle {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--accent);
+      padding: 14px 40px;
+      font-size: 12px;
+      letter-spacing: 0.2em;
       cursor: pointer;
+      transition: all 0.3s;
+      border-radius: 2px;
+      margin-top: 20px;
     }
 
-    .create-btn {
-      background-color: #3498db;
-      color: white;
+    .btn-shuffle:hover {
+      background: var(--accent);
+      color: var(--bg);
     }
 
-    .random-btn {
-      background-color: #2ecc71;
-      color: white;
+    #counter {
+      margin-top: 30px;
+      font-size: 11px;
+      color: var(--secondary);
+      letter-spacing: 0.1em;
+    }
+
+    /* 숫자 변경 시 애니메이션 */
+    .fade-in {
+      animation: fadeIn 0.4s ease-out;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(5px); }
+      to { opacity: 1; transform: translateY(0); }
     }
   </style>
 </head>
 <body>
-  <h2>자리 배정 보드</h2>
 
-  <div>
-    <label>행: <input type="number" id="rows" value="5" min="1"></label>
-    <label>열: <input type="number" id="cols" value="6" min="1"></label>
+  <h1>SEAT LOGIC</h1>
+
+  <div class="controls">
+    <div class="input-item">
+      <label>Rows</label>
+      <input type="number" id="rows" value="5">
+    </div>
+    <div class="input-item">
+      <label>Cols</label>
+      <input type="number" id="cols" value="6">
+    </div>
+    <div class="input-item">
+      <label>Voids</label>
+      <input type="number" id="disabledSeats" value="0">
+    </div>
+    <button class="btn-main" onclick="generateBoard()">INITIALIZE</button>
   </div>
 
-  <div style="margin-top: 8px;">
-    <label>사용하지 않는 좌석: <input type="number" id="disabledSeats" value="0" min="0"></label>
-    <button class="create-btn" onclick="generateBoard()">보드 생성</button>
-  </div>
-
-  <div class="blackboard">칠판</div>
+  <div class="front-label">SCREEN</div>
 
   <div id="board"></div>
 
-  <button class="random-btn" onclick="randomizeBoard()" style="display:none;" id="randomBtn">
-    랜덤 돌리기
+  <button class="btn-shuffle" onclick="randomizeBoard()" id="randomBtn" style="display:none;">
+    SHUFFLE
   </button>
   
-  <div id="counterBox" style="display:none; margin-top:10px; font-size:16px; font-weight:bold; color:#333;">
-    돌린 횟수: 0
+  <div id="counter" style="display:none;">
+    SEQUENTIAL_INDEX: <span id="countVal">0</span>
   </div>
 
   <script>
@@ -133,7 +252,7 @@
 
       const board = document.getElementById("board");
       board.innerHTML = "";
-      board.style.gridTemplateColumns = `repeat(${cols}, 50px)`;
+      board.style.gridTemplateColumns = `repeat(${cols}, var(--cell-size))`;
 
       const totalSeats = rows * cols;
       for (let i = 0; i < totalSeats; i++) {
@@ -147,14 +266,14 @@
       const cells = document.querySelectorAll(".cell");
       for (let i = 0; i < disabledSeats; i++) {
         const index = totalSeats - 1 - i;
-        cells[index].classList.add("disabled");
+        if(cells[index]) cells[index].classList.add("disabled");
       }
 
       manualAssignments = {};
       count = 0;
-      document.getElementById("counterBox").style.display = "block";
-      document.getElementById("counterBox").textContent = "돌린 횟수: 0";
-      document.getElementById("randomBtn").style.display = "inline-block";
+      document.getElementById("counter").style.display = "block";
+      document.getElementById("countVal").textContent = "0";
+      document.getElementById("randomBtn").style.display = "block";
     }
 
     function handleCellClick(index) {
@@ -166,13 +285,15 @@
         cell.textContent = "";
         cell.classList.remove("fixed");
       } else {
-        const num = prompt("이 자리에 넣을 번호를 입력하세요:");
+        const num = prompt("FIX ID:");
         if (!num) return;
         const number = parseInt(num);
-        if (isNaN(number)) return alert("숫자를 입력하세요!");
+        if (isNaN(number)) return;
 
-        const exists = Object.values(manualAssignments).includes(number);
-        if (exists) return alert(`${number}번은 이미 지정된 자리입니다.`);
+        if (Object.values(manualAssignments).includes(number)) {
+          alert("Duplicate ID exists.");
+          return;
+        }
 
         manualAssignments[index] = number;
         cell.textContent = number;
@@ -188,100 +309,175 @@
       return array;
     }
 
-    function randomizeBoard() {
-      const board = document.getElementById("board");
-      const cells = board.querySelectorAll(".cell");
-      const totalSeats = rows * cols;
-      const activeSeats = totalSeats - disabledSeats;
+    function getNeighborIndexes(index) {
+      const row = Math.floor(index / cols);
+      const col = index % cols;
+      const neighbors = [];
 
+      for (let r = row - 1; r <= row + 1; r++) {
+        for (let c = col - 1; c <= col + 1; c++) {
+          if (r === row && c === col) continue;
+          if (r < 0 || r >= rows || c < 0 || c >= cols) continue;
+          neighbors.push(r * cols + c);
+        }
+      }
+
+      return neighbors;
+    }
+
+    function getSideNeighborIndexes(index) {
+      const row = Math.floor(index / cols);
+      const col = index % cols;
+      const neighbors = [];
+
+      if (col - 1 >= 0) neighbors.push(row * cols + (col - 1));
+      if (col + 1 < cols) neighbors.push(row * cols + (col + 1));
+
+      return neighbors;
+    }
+
+    function getValid22Spots(cells, fixedIndexes) {
+      const valid22Spots = [];
+      const secondBottomStart = Math.max(0, (rows - 2) * cols);
+      const excludedIndexes = new Set();
+
+      if (rows === 6 && cols === 6) {
+        excludedIndexes.add((rows * cols) - 4);
+      }
+
+      if (rows >= 2 && cols >= 5) {
+        const upperBottomRowStart = (rows - 2) * cols;
+        excludedIndexes.add(upperBottomRowStart + 2);
+        excludedIndexes.add(upperBottomRowStart + 4);
+      }
+
+      for (let i = secondBottomStart; i < rows * cols; i++) {
+        if (excludedIndexes.has(i)) continue;
+        if (cells[i].classList.contains("disabled")) continue;
+        if (fixedIndexes.includes(i)) continue;
+        valid22Spots.push(i);
+      }
+
+      return valid22Spots;
+    }
+
+    function placeNumbers(cells, fixedIndexes, availableNumbers) {
+      const assignments = new Map();
+      let remainingNumbers = [...availableNumbers];
+      let openIndexes = [];
+      let idx22 = fixedIndexes.find(index => manualAssignments[index] === 22) ?? -1;
+      let idx23 = fixedIndexes.find(index => manualAssignments[index] === 23) ?? -1;
+      let idx33 = fixedIndexes.find(index => manualAssignments[index] === 33) ?? -1;
+
+      cells.forEach((cell, i) => {
+        if (!cell.classList.contains("disabled") && !fixedIndexes.includes(i)) {
+          openIndexes.push(i);
+        }
+      });
+
+      if (idx22 === -1 && remainingNumbers.includes(22)) {
+        let candidate22Spots = getValid22Spots(cells, fixedIndexes);
+
+        if (idx23 !== -1) {
+          const blockedBy23 = new Set(getNeighborIndexes(idx23));
+          candidate22Spots = candidate22Spots.filter(index => index !== idx23 && !blockedBy23.has(index));
+        }
+
+        if (candidate22Spots.length > 0) {
+          const chosenIndex = candidate22Spots[Math.floor(Math.random() * candidate22Spots.length)];
+          idx22 = chosenIndex;
+          assignments.set(chosenIndex, 22);
+          remainingNumbers = remainingNumbers.filter(n => n !== 22);
+          openIndexes = openIndexes.filter(index => index !== chosenIndex);
+        }
+      }
+
+      if (idx33 === -1 && remainingNumbers.includes(33) && idx22 !== -1) {
+        let candidate33Spots = getNeighborIndexes(idx22).filter(index => openIndexes.includes(index));
+
+        if (idx23 !== -1) {
+          candidate33Spots = candidate33Spots.filter(index => index !== idx23);
+        }
+
+        if (candidate33Spots.length > 0) {
+          const chosenIndex = shuffle([...candidate33Spots])[0];
+          idx33 = chosenIndex;
+          assignments.set(chosenIndex, 33);
+          remainingNumbers = remainingNumbers.filter(n => n !== 33);
+          openIndexes = openIndexes.filter(index => index !== chosenIndex);
+        }
+      }
+
+      if (idx23 === -1 && remainingNumbers.includes(23)) {
+        let candidate23Spots = [...openIndexes];
+
+        if (idx22 !== -1) {
+          const blockedBy22 = new Set(getNeighborIndexes(idx22));
+          candidate23Spots = candidate23Spots.filter(index => index !== idx22 && !blockedBy22.has(index));
+        }
+
+        if (candidate23Spots.length > 0) {
+          const chosenIndex = shuffle([...candidate23Spots])[0];
+          idx23 = chosenIndex;
+          assignments.set(chosenIndex, 23);
+          remainingNumbers = remainingNumbers.filter(n => n !== 23);
+          openIndexes = openIndexes.filter(index => index !== chosenIndex);
+        }
+      }
+
+      if (idx22 !== -1 && remainingNumbers.includes(10) && Math.random() < 0.6) {
+        const candidate10Spots = getSideNeighborIndexes(idx22).filter(index => openIndexes.includes(index));
+
+        if (candidate10Spots.length > 0) {
+          const chosenIndex = shuffle([...candidate10Spots])[0];
+          assignments.set(chosenIndex, 10);
+          remainingNumbers = remainingNumbers.filter(n => n !== 10);
+          openIndexes = openIndexes.filter(index => index !== chosenIndex);
+        }
+      }
+
+      if (idx33 !== -1 && remainingNumbers.includes(11)) {
+        const blockedBy33 = new Set(getNeighborIndexes(idx33));
+        const candidate11Spots = openIndexes.filter(index => !blockedBy33.has(index));
+
+        if (candidate11Spots.length > 0) {
+          const chosenIndex = shuffle([...candidate11Spots])[0];
+          assignments.set(chosenIndex, 11);
+          remainingNumbers = remainingNumbers.filter(n => n !== 11);
+          openIndexes = openIndexes.filter(index => index !== chosenIndex);
+        }
+      }
+
+      const shuffledNumbers = shuffle(remainingNumbers);
+      let numberIdx = 0;
+
+      openIndexes.forEach(index => {
+        assignments.set(index, shuffledNumbers[numberIdx++]);
+      });
+
+      cells.forEach((cell, i) => {
+        if (cell.classList.contains("disabled") || fixedIndexes.includes(i)) return;
+        cell.textContent = assignments.get(i) ?? "";
+        cell.classList.add('fade-in');
+        setTimeout(() => cell.classList.remove('fade-in'), 400);
+      });
+    }
+
+    function randomizeBoard() {
+      const cells = document.querySelectorAll(".cell");
       count++;
-      document.getElementById("counterBox").textContent = `돌린 횟수: ${count}`;
+      document.getElementById("countVal").textContent = count;
+
+      const activeCells = Array.from(cells).filter(c => !c.classList.contains("disabled"));
+      const activeSeatsCount = activeCells.length;
 
       const fixedIndexes = Object.keys(manualAssignments).map(Number);
       const fixedNumbers = Object.values(manualAssignments);
 
-      let availableNumbers = Array.from({ length: activeSeats }, (_, i) => i + 1)
+      let availableNumbers = Array.from({ length: activeSeatsCount }, (_, i) => i + 1)
         .filter(n => !fixedNumbers.includes(n));
 
-      // --- 3의 배수일 때: 완전 랜덤 배치 (수동 지정 제외) ---
-      if (count % 3 === 0) {
-        const randomNumbers = shuffle([...availableNumbers]);
-        let idx = 0;
-        for (let i = 0; i < totalSeats; i++) {
-          const cell = cells[i];
-          if (cell.classList.contains("disabled")) {
-            cell.textContent = "";
-            continue;
-          }
-          if (fixedIndexes.includes(i)) {
-            cell.textContent = manualAssignments[i];
-            cell.classList.add("fixed");
-            continue;
-          }
-          cell.textContent = randomNumbers[idx++];
-          cell.classList.remove("fixed");
-        }
-        return;
-      }
-
-      // === 일반 규칙 적용 모드 ===
-      // 22번 자리 후보 (맨 아래줄 + 아래쪽 절반의 양쪽 끝)
-      const bottomIndexes = [];
-      for (let c = 0; c < cols; c++) bottomIndexes.push((rows - 1) * cols + c);
-      const sideIndexes = [];
-      for (let r = Math.floor(rows / 2); r < rows; r++) {
-        sideIndexes.push(r * cols);
-        sideIndexes.push(r * cols + (cols - 1));
-      }
-      const valid22Spots = [...bottomIndexes, ...sideIndexes];
-      const available22 = valid22Spots.filter(i => !fixedIndexes.includes(i));
-      const idx22 = available22[Math.floor(Math.random() * available22.length)];
-
-      // 3번 자리 후보 (22번 기준 인접 위쪽·양옆·대각선)
-      const row22 = Math.floor(idx22 / cols);
-      const col22 = idx22 % cols;
-      const candidate3 = [];
-      for (let dr = -2; dr <= 0; dr++) {
-        for (let dc = -2; dc <= 2; dc++) {
-          const r = row22 + dr;
-          const c = col22 + dc;
-          if (r >= 0 && r < rows && c >= 0 && c < cols) {
-            if (!(r === row22 && c === col22)) candidate3.push(r * cols + c);
-          }
-        }
-      }
-      const available3 = candidate3.filter(i => !fixedIndexes.includes(i) && i !== idx22);
-      const idx3 = available3[Math.floor(Math.random() * available3.length)];
-
-      // 나머지 번호 섞기
-      availableNumbers = availableNumbers.filter(n => ![3, 22].includes(n));
-      const shuffled = shuffle(availableNumbers);
-      let idx = 0;
-
-      for (let i = 0; i < totalSeats; i++) {
-        const cell = cells[i];
-        if (cell.classList.contains("disabled")) {
-          cell.textContent = "";
-          continue;
-        }
-        if (fixedIndexes.includes(i)) {
-          cell.textContent = manualAssignments[i];
-          cell.classList.add("fixed");
-          continue;
-        }
-        if (i === idx22) {
-          cell.textContent = 22;
-          cell.classList.remove("fixed");
-          continue;
-        }
-        if (i === idx3) {
-          cell.textContent = 3;
-          cell.classList.remove("fixed");
-          continue;
-        }
-        cell.textContent = shuffled[idx++];
-        cell.classList.remove("fixed");
-      }
+      placeNumbers(cells, fixedIndexes, availableNumbers);
     }
   </script>
 </body>
